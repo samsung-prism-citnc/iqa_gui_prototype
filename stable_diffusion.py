@@ -1,7 +1,8 @@
 import requests
 from utils import base64_to_pil
+import json
 
-STABLE_DIFFUSION_ENDPOINT = 'http://anssug-ip-34-122-150-57.tunnelmole.net/'
+STABLE_DIFFUSION_ENDPOINT = 'http://kjsygz-ip-34-122-150-57.tunnelmole.net/generate_image'
 
 class StableDiffusion:
     def __init__(self):
@@ -9,6 +10,11 @@ class StableDiffusion:
 
     def generate_image(self, prompt):
         response = requests.get(self.endpoint, params={'prompt': prompt})
-        image_base64 = response.content.decode('utf-8')
+        result = response.json()
+
+        image_base64 = result['image_base64']
+        generated_caption = result['generated_caption']
+        similary_score = result['similarity_score']
         image = base64_to_pil(image_base64)
-        return image
+        
+        return image, generated_caption, similary_score

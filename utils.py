@@ -15,3 +15,9 @@ def pil_image_to_qpixmap(pil_image):
     qimage = QImage(image_array.data, image_array.shape[1], image_array.shape[0], QImage.Format_RGB888).rgbSwapped()
     qpixmap = QPixmap.fromImage(qimage)
     return qpixmap
+
+def pil_to_base64(image):
+    buffered = BytesIO()
+    image.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
+    return img_str
