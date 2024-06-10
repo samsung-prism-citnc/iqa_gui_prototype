@@ -4,6 +4,10 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, QProgressBar, QGroupBox, QGridLayout, QMessageBox
 )
 from PyQt5.QtGui import QPixmap
+from stable_diffusion import StableDiffusion
+from utils import pil_image_to_qpixmap
+
+stable_diffusion = StableDiffusion()
 
 class GUI(QWidget):
     def __init__(self):
@@ -104,8 +108,12 @@ class GUI(QWidget):
 
     def generate_image(self):
         # Placeholder for generating image logic
-        self.image_display_label.setPixmap(QPixmap("main.py").scaled(600, 600, aspectRatioMode=1))
-        QMessageBox.information(self, 'Generate Image', 'Generate image not implemented.')
+
+        image = stable_diffusion.generate_image(self.prompt_field.text())
+        qpixmap = pil_image_to_qpixmap(image)
+        self.image_display_label.setPixmap(qpixmap)
+
+        QMessageBox.information(self, 'Generate Image', 'Image generated.')
         self.overall_progress_bar.setValue(60)
 
     def check_quality(self):
