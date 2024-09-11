@@ -1,129 +1,141 @@
-import sys
-from PyQt5.QtWidgets import (
-    QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, 
-    QHBoxLayout, QProgressBar, QGroupBox, QGridLayout, QMessageBox
-)
-from PyQt5.QtGui import QPixmap
+import gradio as gr
+from PIL import Image
 from stable_diffusion import StableDiffusion
-from utils import pil_image_to_qpixmap
+from hugchat import hugchat
+from hugchat.login import Login
+from keras.applications.vgg16 import VGG16, preprocess_input
+from keras.preprocessing import image
+import numpy as np
+
+# HugChat credentials and login setup
+EMAIL = "sahilgowda204@gmail.com"
+PASSWD = "Sahilgowda2004"
+cookie_path_dir = "./cookies/"
+
+sign = Login(EMAIL, PASSWD)
+cookies = sign.login(cookie_dir_path=cookie_path_dir, save_cookies=True)
+chatbot = hugchat.ChatBot(cookies=cookies.get_dict())
 
 stable_diffusion = StableDiffusion()
 
-class GUI(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.initUI()
+def chat_function(message):
+    response = chatbot.chat(message).wait_until_done()
+    return response
 
-    def initUI(self):
-        self.setWindowTitle('GUI')
-        self.setGeometry(100, 100, 800, 600)  # Increased size for better display
+def generate_image(prompt):
+    image, generated_caption, similarity_score = stable_diffusion.generate_image(prompt)
+    return image, similarity_score * 100  # Return the similarity score as a percentage
 
-        # Main Layout
-        main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(10, 10, 10, 10)  # Add some margins
+def calculate_accuracy_vgg16(image_path):
+    """
+    Calculate the accuracy of an image using a pre-trained VGG16 model.
 
-        # Prompt Section
-        prompt_layout = QHBoxLayout()
-        prompt_label = QLabel('Prompt:')
-        self.prompt_field = QLineEdit()
-        prompt_layout.addWidget(prompt_label)
-        prompt_layout.addWidget(self.prompt_field)
-        main_layout.addLayout(prompt_layout)
+    Args:
+        image_path (str): The path to the image file.
 
-        # Generate Image Button
-        self.generate_button = QPushButton('Generate Image', self)
-        self.generate_button.clicked.connect(self.generate_image)
-        main_layout.addWidget(self.generate_button)
+    Returns:
+        float: The accuracy of the image as a percentage.
+    """
+    # Load the pre-trained VGG16 model
+    model = VGG16(weights='imagenet')
 
-        # Image Display Section
-        self.image_display_box = QGroupBox('Generated Image')
-        image_display_layout = QVBoxLayout()
-        self.image_display_label = QLabel()
-        image_display_layout.addWidget(self.image_display_label)
-        self.image_display_box.setLayout(image_display_layout)
-        main_layout.addWidget(self.image_display_box)
+    # Load the image and preprocess it
+    img = image.load_img(image_path, target_size=(224, 224))
+    x = image.img_to_array(img)
+    x = np.expand_dims(x, axis=0)
+    x = preprocess_input(x)
 
-        # Quality Progress Bars
-        quality_layout = QGridLayout()  # Use grid layout for better alignment
+    # Make predictions on the image
+    preds = model.predict(x)
 
-        # LIQA Progress Bar
-        # liqa_label = QLabel('LIQA')
-        # self.liqa_progress_bar = QProgressBar(self)
-        # quality_layout.addWidget(liqa_label, 0, 0)
-        # quality_layout.addWidget(self.liqa_progress_bar, 0, 1)
+    # Get the predicted label
+    predicted_label = np.argmax(preds[0])
 
-        # # DBCNN Progress Bar
-        # dbcnn_label = QLabel('DBCNN')
-        # self.dbcnn_progress_bar = QProgressBar(self)
-        # quality_layout.addWidget(dbcnn_label, 1, 0)
-        # quality_layout.addWidget(self.dbcnn_progress_bar, 1, 1)
+    # For demonstration purposes, we'll assume the accuracy is based on the confidence of the predicted label
+    accuracy = preds[0][predicted_label]
 
-        # # MIAQ Progress Bar
-        # miaq_label = QLabel('MIAQ')
-        # self.miaq_progress_bar = QProgressBar(self)
-        # quality_layout.addWidget(miaq_label, 2, 0)
-        # quality_layout.addWidget(self.miaq_progress_bar, 2, 1)
+    # Return the accuracy as a percentage
+    return accuracy * 100
 
-        # Overall Progress Bar
-        overall_label = QLabel('Prompt Similary Model')
-        self.overall_progress_bar = QProgressBar(self)
-        quality_layout.addWidget(overall_label, 3, 0)
-        quality_layout.addWidget(self.overall_progress_bar, 3, 1)
+def handle_upload(image):
+    # Calculate the accuracy using VGG16
+    accuracy = calculate_accuracy_vgg16(image.name)
+    return Image.open(image.name), accuracy  # Return the image and accuracy as a percentage
 
-        # Check Quality Button
-        # self.quality_button = QPushButton('Check Quality', self)
-        # self.quality_button.clicked.connect(self.check_quality)
-        # quality_layout.addWidget(self.quality_button, 4, 0, 1, 2)  # Span the button across two columns
+with gr.Blocks(css="""
+    .container {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 20px;
+    }
+    .header {
+        border:2px solid rgb(0 0 0 / 44%);
+        background-color: rgb(168 198 255);
+        color: white;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        font-family: Arial, sans-serif;
+        margin-bottom: 20px;
+    }
+    .box {
+        border: 2px solid #4F46E5;
+        border-radius: 8px;
+        padding: 10px;
+        margin: 10px;
+        width: 100%;
+        max-width: 500px;
+        height: 430px;
+    }
+    .button {
+        background-color: #3B3A9A;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    .button:hover {
+        background-color: #2C287A;
+    }
+    .textbox {
+        border: 2px solid #4F46E5;
+        border-radius: 8px;
+        padding: 10px;
+        margin: 10px;
+        width: 100%;
+        max-width: 500px;
+    }
+""") as demo:
+    with gr.Row(elem_id="container"):
+        with gr.Column(scale=1):
+            gr.HTML("<div class='header'><h2>Chat Box</h2></div>")
+            chatbox = gr.Chatbot(height=750, elem_id="box")
+            chat_input = gr.Textbox(show_label=False, placeholder="Type a message...", elem_id="textbox")
+            chat_button = gr.Button("Send", elem_id="button")
 
-        # Align Quality Layout to the Right
-        quality_layout_container = QHBoxLayout()
-        quality_layout_container.addStretch()
-        quality_layout_container.addLayout(quality_layout)
-        main_layout.addLayout(quality_layout_container)
+        with gr.Column(scale=2):
+            gr.HTML("<div class='header'><h2>Image Display</h2></div>")
+            prompt_input = gr.Textbox(placeholder="Enter the prompt for image generation...", label="Prompt", elem_id="textbox")
+            image_display = gr.Image(label="Image Display", type="pil", height=430, elem_id="box")
+            with gr.Row():
+                generate_button = gr.Button("Generate Image", elem_id="button")
+                upload_button = gr.UploadButton("Upload Image", elem_id="button")
+            quality_text = gr.Textbox(label="Image Quality", interactive=False, elem_id="textbox")
 
-        # Set main layout
-        self.setLayout(main_layout)
+    def update_chat(chatbox, message):
+        response = chat_function(message)
+        return chatbox + [(message, response)]
 
-        # Add some styles
-        self.setStyleSheet("""
-            QPushButton {
-                background-color: #4CAF50;
-                color: white;
-                border: none;
-                padding: 15px 32px;
-                text-align: center;
-                text-decoration: none;
-                display: inline-block;
-                font-size: 16px;
-                margin: 4px 2px;
-                transition-duration: 0.4s;
-                cursor: pointer;
-            }
-            QPushButton:hover {
-                background-color: #45a049;
-            }
-        """)
+    def handle_image_generation(prompt):
+        image, similarity_score = generate_image(prompt)
+        return image, similarity_score
 
-        self.show()
+    chat_button.click(update_chat, [chatbox, chat_input], chatbox)
+    generate_button.click(handle_image_generation, prompt_input, [image_display, quality_text])
+    upload_button.upload(handle_upload, upload_button, [image_display, quality_text])
 
-    def generate_image(self):
-        # Placeholder for generating image logic
-
-        image, generated_caption, similarity_score = stable_diffusion.generate_image(self.prompt_field.text())
-        qpixmap = pil_image_to_qpixmap(image)
-        self.image_display_label.setPixmap(qpixmap)
-
-        QMessageBox.information(self, 'Generate Image', 'Image generated.')
-        self.overall_progress_bar.setValue(int(similarity_score * 100))
-
-    def check_quality(self):
-        # Placeholder for quality check logic
-        # self.liqa_progress_bar.setValue(0)
-        # self.dbcnn_progress_bar.setValue(0)
-        # self.miaq_progress_bar.setValue(0)
-        QMessageBox.information(self, 'Check Quality', 'Quality check not implemented.')
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    gui = GUI()
-    sys.exit(app.exec_())
+demo.launch()

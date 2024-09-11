@@ -2,7 +2,7 @@ import requests
 from utils import base64_to_pil
 import json
 
-STABLE_DIFFUSION_ENDPOINT = 'http://kjsygz-ip-34-122-150-57.tunnelmole.net/generate_image'
+STABLE_DIFFUSION_ENDPOINT = 'http://127.0.0.1:5000/generate_image'
 
 class StableDiffusion:
     def __init__(self):
