@@ -62,7 +62,7 @@ def handle_upload(image):
     accuracy = calculate_accuracy_vgg16(image.name)
     return Image.open(image.name), accuracy  # Return the image and accuracy as a percentage
 
-with gr.Blocks(css="""
+with gr.Blocks(css=""" 
     .container {
         display: flex;
         flex-direction: row;
@@ -109,6 +109,17 @@ with gr.Blocks(css="""
         width: 100%;
         max-width: 500px;
     }
+    .dropdown {
+        border: 2px solid #4F46E5;
+        border-radius: 8px;
+        padding: 10px;
+        margin: 10px;
+        width: 100%;
+        max-width: 500px;
+        background-color: white;
+        color: #4F46E5;
+        font-family: Arial, sans-serif;
+    }
 """) as demo:
     with gr.Row(elem_id="container"):
         with gr.Column(scale=1):
@@ -124,7 +135,17 @@ with gr.Blocks(css="""
             with gr.Row():
                 generate_button = gr.Button("Generate Image", elem_id="button")
                 upload_button = gr.UploadButton("Upload Image", elem_id="button")
-            quality_text = gr.Textbox(label="Image Quality", interactive=False, elem_id="textbox")
+            
+            # Adding the Dropdown for model selection
+            with gr.Row():
+                quality_model_selection = gr.Dropdown(
+                    label="Select Quality Model",
+                    choices=["CNNIQA", "Prompt Similarity", "TRCNN"],
+                    value="Prompt Similarity",
+                    interactive=True,
+                    elem_id="dropdown"
+                )
+                quality_text = gr.Textbox(label="Image Quality", interactive=True, elem_id="textbox")
 
     def update_chat(chatbox, message):
         response = chat_function(message)
