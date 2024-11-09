@@ -57,8 +57,6 @@ The TRCNN combines the CNN's feature extraction with the VT's ranking abilities 
 ## Interface
 
 ![WhatsApp Image 2024-09-27 at 12 29 03_794eeff4](https://github.com/user-attachments/assets/726eb16c-8ebc-48b6-8a22-94da2e02e323)
-![WhatsApp Image 2024-09-27 at 12 29 03_795b6675](https://github.com/user-attachments/assets/c85cb277-affd-4c16-b85c-2008265516f1)
-![WhatsApp Image 2024-09-27 at 12 29 03_030897f9](https://github.com/user-attachments/assets/b0fa7926-f319-48a5-9a67-1936e4135844)
 
 ## Training
 
