@@ -1,5 +1,7 @@
 # Image Quality Assessment (IQA) with TRCNN Model
 
+![WhatsApp Image 2024-10-26 at 12 58 10_cbb80fcf](https://github.com/user-attachments/assets/607bd045-dbd0-497e-b2e2-91e0cfde65f5)
+
 ## Overview
 
 This project implements an **Image Quality Assessment (IQA)** model using a **TRCNN (Transformer-CNN)** architecture. The model combines the power of **Convolutional Neural Networks (CNNs)** for feature extraction and **Visual Transformers (VTs)** for ranking images based on their quality. The goal is to assess the perceptual quality of images across a wide range of conditions, such as compression artifacts, noise, and distortion.
